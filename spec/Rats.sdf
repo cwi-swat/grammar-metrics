@@ -1,0 +1,86 @@
+module Rats
+
+imports Curly
+
+hiddens
+context-free start-symbols Module
+
+exports
+
+sorts Module Intro Production ModuleDecl Dependency Footer
+   Body ModuleRef Header Option ModuleParams ModuleTarget
+context-free syntax
+   Intro Production* -> Module
+   ModuleDecl Dependency* Header? Body? Footer? Option? -> Intro
+   "module" ModuleRef ";" -> ModuleDecl
+   "modify" ModuleRef ModuleTarget? ";" -> Dependency
+   "instantiate" ModuleRef ModuleTarget? ";" -> Dependency
+   "import" ModuleRef ModuleTarget? ";" -> Dependency
+   QName ModuleParams? -> ModuleRef
+   "(" {QName ","}+ ")" -> ModuleParams
+   "as" QName -> ModuleTarget
+   "header" Action -> Header
+   "body" Action -> Body
+   "footer" Action -> Footer
+   "option" {Attribute ","}+ ";" -> Option
+   
+sorts PAttributes PType Choice Attribute
+context-free syntax
+   PAttributes PType Ident "=" Choice ";" -> Production
+   PType Ident "+=" SName "..." "/" Choice ";" -> Production
+   PType Ident "+=" Choice "/" SName  "..." ";" -> Production
+
+   PType Ident "-=" {SName ","}+ ";" -> Production
+   PType Ident ":=" Choice ";" -> Production
+   PType Ident ":=" "..." "/" Choice ";" -> Production
+   PType Ident ":=" Choice "/" "..." ";" -> Production
+   PAttributes PType Ident ":=" "..." ";" -> Production
+   Attribute* -> PAttributes
+   QName -> PType
+   QName SName -> PType
+
+sorts Sequence Voided Prefix Suffix Action NodeMarker Primary 
+context-free syntax
+   {Sequence "/"}+ -> Choice
+   SName? Voided* -> Sequence 
+   ("void" ":")? Prefix -> Voided
+   ("&" | "!" | "^" | (Ident ":") | (String ":"))? Suffix -> Prefix
+
+   Primary ("?" | "*" | "+")? -> Suffix
+   "null" | QName | Literal | NodeMarker | Action -> Primary
+   "(" Choice ")" -> Primary %%{bracket}
+   "@" Ident -> NodeMarker
+   Block -> Action
+
+   "null" -> Ident {reject}
+   "_" -> Ident {reject}
+
+
+sorts Literal Class SName QName AttValue Integer
+context-free syntax
+   Ident -> Attribute
+   Ident "(" AttValue ")" -> Attribute
+   Integer | QName | String -> AttValue
+
+   {Ident "."}+ -> QName
+   "<" Ident ">" -> SName
+   
+   "_" | String | Class -> Literal
+
+   "[" ((Char "-" Char) | Char)* "]" -> Class
+
+
+sorts Char Escape HexQuad OctDigit OctalEscape HexDigit
+lexical syntax
+  Escape -> Char
+  ~[\-\]\\] -> Char
+  [\\] [btnfr\"\'\[\\\]\-] -> Escape
+  [\\] [u] HexQuad -> Escape
+  OctalEscape -> Escape
+  [\\] [0-3] OctDigit OctDigit -> OctalEscape
+  [\\] OctDigit OctDigit -> OctalEscape
+  [\\] OctDigit -> OctalEscape
+  [0-7] -> OctDigit
+  HexDigit HexDigit HexDigit HexDigit -> HexQuad
+  [a-fA-F0-9] -> HexDigit
+
