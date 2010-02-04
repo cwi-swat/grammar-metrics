@@ -26,6 +26,7 @@ context-free syntax
    "returns" SqBracket -> Attr
    SqBracket -> Attr
    "scope" Ident ";" -> Attr
+   "options" Block  -> Attr
 
 
    AttrCode -> Symbol
