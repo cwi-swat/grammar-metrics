@@ -1,0 +1,12 @@
+module languages/waebric/syntax/Functions
+
+imports languages/waebric/syntax/Statements
+
+exports
+
+sorts FunctionDef Formals
+
+context-free syntax
+  "(" {IdCon ","}* ")" -> Formals {cons("formals")}
+   -> Formals {cons("empty")}
+  "def" IdCon Formals Statement* "end" -> FunctionDef {cons("def")}

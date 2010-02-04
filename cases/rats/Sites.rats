@@ -1,0 +1,18 @@
+module waebric.java.rats.parser.Sites;
+
+import waebric.java.rats.parser.Identifiers;
+import waebric.java.rats.parser.Markup;
+import waebric.java.rats.parser.Layout;
+
+generic Site = void:"site":Word Mappings? void:"end":Word;
+
+generic Mapping = Dir void:":":Sym Markup;
+
+Pair<Node> Mappings = Mapping (void:";":Sym Mapping)*;  
+
+String Dir = 
+	Elt ('/' Elt)*
+	/ ('/' Elt)*;
+
+String Elt = (![ \t\n\r:/\\] _)+;
+	

@@ -1,0 +1,81 @@
+module JavaScript
+
+imports Curly
+
+hiddens
+context-free start-symbols
+  Source
+
+
+exports
+
+sorts Keyword Method
+context-free syntax
+"case" -> Keyword {class("Decision")}
+"while" -> Keyword {class("Decision")}
+"for" -> Keyword {class("Decision")}
+"if" -> Keyword {class("Decision")}
+"catch" -> Keyword {class("Decision")}
+
+"function" Ident? "(" {Ident ","}* ")" Block -> Method
+Method -> Word {class("Method")}
+
+context-free priorities
+  Keyword -> Word
+  >
+  "function" -> Keyword
+  
+
+context-free syntax
+"default" -> Keyword
+"else" -> Keyword
+"finally" -> Keyword
+"break" -> Keyword
+"continue" -> Keyword
+"import" -> Keyword
+"new" -> Keyword
+"this" -> Keyword
+"void" -> Keyword
+"function" -> Keyword
+"in" -> Keyword
+"return" -> Keyword
+"typeof" -> Keyword
+%%"comment" -> Keyword
+"label" -> Keyword
+"delete" -> Keyword
+"export" -> Keyword
+"var" -> Keyword
+"with" -> Keyword
+"abstract" -> Keyword
+"implements" -> Keyword
+"protected" -> Keyword
+"boolean" -> Keyword
+"instanceOf" -> Keyword
+"public" -> Keyword
+"byte" -> Keyword
+"int" -> Keyword
+"short" -> Keyword
+"char" -> Keyword
+"interface" -> Keyword
+"static" -> Keyword
+"double" -> Keyword
+"long" -> Keyword
+"synchronized" -> Keyword
+"false" -> Keyword
+"native" -> Keyword
+"throws" -> Keyword
+"final" -> Keyword
+"null" -> Keyword
+"transient" -> Keyword
+"float" -> Keyword
+"package" -> Keyword
+"true" -> Keyword
+"goto" -> Keyword
+"private" -> Keyword
+"enum" -> Keyword
+"throw" -> Keyword
+"class" -> Keyword
+"extends" -> Keyword
+"const" -> Keyword
+"debugger" -> Keyword
+"super" -> Keyword

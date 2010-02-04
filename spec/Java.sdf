@@ -1,0 +1,109 @@
+module Java
+
+imports Curly
+
+hiddens
+context-free start-symbols
+  Source
+
+exports
+sorts Keyword Class Dummy Dim Arg TypeArg Num
+
+context-free syntax
+    Class -> Word {class("Class")}
+
+    "class" Ident Arg* Block -> Class
+    "enum" Ident Block -> Class
+ 
+     
+
+    "new" {Ident "."}+ TypeArg? Bracket Block -> Class
+    "new" {Ident "."}+ TypeArg? Block -> Class
+    "new" {Ident "."}+ TypeArg? Dim+ Block -> Word
+    "new" {Ident "."}+ TypeArg? Dim+ Dummy -> Word
+    "new" {Ident "."}+ TypeArg? Bracket Dummy -> Word
+
+    "<" {Ident ","}+ ">" -> TypeArg
+
+    -> Dummy
+    "[" Num? "]" -> Dim
+
+    ".class" -> Word
+
+lexical syntax
+	[0-9]+ -> Num
+lexical restrictions
+   Num -/- [0-9]
+
+context-free restrictions
+   Dummy -/- [\{]
+   Keyword -/- [0-9a-zA-Z\_\$]
+   "new" -/- [0-9a-zA-Z\_\$]
+
+context-free priorities
+    Keyword -> Word
+    >
+    {"class" -> Keyword
+     "new" -> Keyword
+     "enum" -> Keyword}
+,
+     Word -> Arg
+     >
+     Block -> Word
+
+context-free syntax
+    "void"          -> Keyword
+    "float"         -> Keyword
+    "double"        -> Keyword
+    "char"          -> Keyword
+    "byte"          -> Keyword
+    "boolean"       -> Keyword
+    "int"           -> Keyword
+    "long"          -> Keyword
+    "short"         -> Keyword
+
+context-free syntax
+    "abstract"      -> Keyword
+    "final"         -> Keyword
+    "native"        -> Keyword
+    "private"       -> Keyword
+    "protected"     -> Keyword
+    "public"        -> Keyword
+    "static"        -> Keyword
+    "strictfp"      -> Keyword
+
+
+context-free syntax
+    "assert"        -> Keyword
+    "break"         -> Keyword
+    "case"          -> Keyword {class("Decision")}
+    "catch"         -> Keyword {class("Decision")}
+    "class"         -> Keyword
+    "const"         -> Keyword
+    "continue"      -> Keyword
+    "default"       -> Keyword 
+    "do"            -> Keyword
+    "else"          -> Keyword
+    "enum"          -> Keyword
+    "extends"       -> Keyword
+    "finally"       -> Keyword
+    "for"           -> Keyword {class("Decision")}
+    "goto"          -> Keyword
+    "if"            -> Keyword {class("Decision")}
+    "implements"    -> Keyword
+    "import"        -> Keyword
+    "instanceof"    -> Keyword
+    "interface"     -> Keyword
+    "new"           -> Keyword
+    "package"       -> Keyword
+    "return"        -> Keyword
+    "super"         -> Keyword
+    "switch"        -> Keyword
+    "synchronized"  -> Keyword
+    "this"          -> Keyword
+    "throw"         -> Keyword
+    "throws"        -> Keyword
+    "transient"     -> Keyword
+    "try"           -> Keyword
+    "volatile"      -> Keyword
+    "while"         -> Keyword {class("Decision")}

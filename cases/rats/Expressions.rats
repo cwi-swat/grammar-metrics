@@ -1,0 +1,39 @@
+module waebric.java.rats.parser.Expressions;
+
+import waebric.java.rats.parser.Text;
+import waebric.java.rats.parser.Numbers;
+import waebric.java.rats.parser.Layout;
+import waebric.java.rats.parser.Identifiers;
+
+public generic Expression = 
+	<Add> Expression void:"+":Sym Postfix @AddExpression
+	/ <Post> Postfix @PostExpression;
+		
+generic Postfix = 
+	<Field> Postfix void:".":Sym Identifier @FieldExpression
+	/ <Primary> Primary @PrimaryExpression;
+	
+generic Primary =
+	Constant
+	/ List
+	/ Record
+	/ Var;
+	
+generic Var = Identifier;
+
+generic Constant = 
+	Text Spacing
+	/ Symbol Spacing
+	/ Number;
+	
+generic Record = void:"{":Sym Pairs? void:"}":Sym;
+ 
+generic	List = void:"[":Sym Expressions? void:"]":Sym;
+		
+Pair<Node> Expressions = Expression (void:",":Sym Expression)*;
+
+generic Pair = Identifier void:":":Sym Expression;
+
+Pair<Node> Pairs = Pair (void:",":Sym Pair)*;
+
+String Symbol = ['][:\-a-zA-Z0-9!@#$%^&*_=+<{}\[\]./?\\|`~]+;

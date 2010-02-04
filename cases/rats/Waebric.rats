@@ -1,0 +1,34 @@
+module waebric.java.rats.parser.Waebric;
+
+import waebric.java.rats.parser.Identifiers;
+import waebric.java.rats.parser.Strings;
+import waebric.java.rats.parser.Text;
+import waebric.java.rats.parser.Expressions;
+import waebric.java.rats.parser.Predicates;
+import waebric.java.rats.parser.Markup;
+import waebric.java.rats.parser.Statements;
+import waebric.java.rats.parser.Sites;
+
+// The true start symbol
+public generic Module = void:"module":Word ModuleId ModuleElement*;
+
+// Helper start symbols for testing purposes
+public generic TestExpression = Expression;
+public generic TestStatement = Statement;
+public generic TestSite = Site;
+public generic TestFunction = Function;
+
+generic ModuleElement =
+	Import
+	/ Site
+	/ Function;
+
+generic Import = void:"import":Word ModuleId void:";":Sym;
+
+generic ModuleId = Identifier (void:".":Sym Identifier)* ;
+
+generic Function = 
+	void:"def":Word Identifier void:"(":Sym Formals? void:")":Sym Statement* void:"end":Word
+	/ void:"def":Word Identifier null Statement* void:"end":Word;
+	
+

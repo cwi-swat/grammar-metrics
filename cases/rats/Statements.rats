@@ -1,0 +1,54 @@
+module waebric.java.rats.parser.Statements;
+
+import waebric.java.rats.parser.Expressions;
+import waebric.java.rats.parser.Identifiers;
+import waebric.java.rats.parser.Predicates;
+import waebric.java.rats.parser.Embedding;
+import waebric.java.rats.parser.Markup;
+import waebric.java.rats.parser.Strings;
+import waebric.java.rats.parser.Layout;
+
+public generic Statement = 
+	If
+	/ Each
+	/ Let
+	/ Comment
+	/ Echo
+	/ CData
+	/ Yield
+	/ Block
+	/ Call;
+
+generic If = 
+	void:"if":Word void:"(":Sym Predicate void:")":Sym Statement void:"else":Word Statement
+	/ void:"if":Word void:"(":Sym Predicate void:")":Sym Statement null;
+	
+generic Each = void:"each":Word void:"(":Sym Pair void:")":Sym Statement;
+
+generic Let = void:"let":Word Binding+ void:"in":Word Statement* void:"end":Word;
+
+generic Comment = void:"comment":Word String void:";":Sym;
+
+generic Echo = 
+	void:"echo":Word Expression void:";":Sym
+	/ void:"echo":Word Embedding void:";":Sym;
+	
+generic CData = void:"cdata":Word Expression void:";":Sym;
+
+generic Yield = void:"yield":Word void:";":Sym;
+
+generic Block = void:"{":Sym Statement* void:"}":Sym;
+
+generic Call =
+	null Markup void:";":Sym
+	/ Markups Expression void:";":Sym 
+	/ Markups Markup void:";":Sym 
+	/ Markups Statement;
+
+Pair<Node> Markups = (Markup ![;])+;
+
+generic Binding  =
+	Identifier void:"=":Sym Expression void:";":Sym
+	/ Identifier void:"(":Sym Formals? void:")":Sym void:"=":Sym Statement;
+
+Pair<Node> Formals = Var (void:",":Sym Var)*;

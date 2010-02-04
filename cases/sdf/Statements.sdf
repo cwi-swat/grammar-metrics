@@ -1,0 +1,53 @@
+module languages/waebric/syntax/Statements
+
+imports languages/waebric/syntax/Expressions
+        languages/waebric/syntax/Predicates
+        languages/waebric/syntax/Markup
+        basic/StrCon
+
+hiddens
+context-free start-symbols
+  Statement
+
+exports
+sorts Statement Assignment Formals
+
+context-free syntax 
+  "if" "(" Predicate ")" Statement NoElseMayFollow  -> Statement {cons("if")} 
+  "if" "(" Predicate ")" Statement "else" Statement -> Statement {cons("if-else")}
+  "each" "(" IdCon ":" Expression ")" Statement       -> Statement {cons("each")}
+  "let" Assignment+ "in" Statement* "end"           -> Statement {cons("let")}
+  "{" Statement* "}"     -> Statement  {cons("block")}
+
+context-free syntax
+  "comment" StrCon ";"   -> Statement  {cons("comment")}
+  "echo" Expression ";"  -> Statement  {cons("echo")}
+  "echo" Embedding ";"  -> Statement  {cons("echo-embedding")}
+  "cdata" Expression ";" -> Statement {cons("cdata")} 
+  "yield" ";"            -> Statement {cons("yield")}
+
+context-free priorities
+
+context-free syntax
+  IdCon "=" Expression ";" -> Assignment {cons("var-bind")}
+
+context-free syntax
+  "if"      -> IdCon {reject} 
+  "comment" -> IdCon {reject} 
+  "echo"    -> IdCon {reject} 
+  "cdata"   -> IdCon {reject} 
+  "each"    -> IdCon {reject} 
+  "let"     -> IdCon {reject} 
+  "yield"   -> IdCon {reject} 
+
+sorts NoElseMayFollow
+
+context-free syntax
+   -> NoElseMayFollow  
+
+context-free restrictions
+  NoElseMayFollow -/- [e].[l].[s].[e]
+
+context-free syntax
+  IdCon "(" {IdCon ","}* ")" "=" Statement -> Assignment {cons("func-bind")} 
+  

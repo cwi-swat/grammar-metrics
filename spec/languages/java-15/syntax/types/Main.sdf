@@ -1,0 +1,19 @@
+%%%
+ %% Chapter 4: Types, Values, and Variables
+ %%
+ %% @author Martin Bravenboer <martin@cs.uu.nl>
+ %%%
+module languages/java-15/syntax/types/Main
+imports
+  languages/java-15/syntax/types/PrimitiveTypes
+  languages/java-15/syntax/types/ReferenceTypes
+  languages/java-15/syntax/types/TypeVariables
+  languages/java-15/syntax/types/ParameterizedTypes
+
+exports
+  sorts
+    Type
+
+  context-free syntax
+    PrimType -> Type
+    RefType  -> Type

@@ -1,0 +1,28 @@
+module  waebric.java.rats.parser.Markup;
+
+import waebric.java.rats.parser.Expressions;
+import waebric.java.rats.parser.Identifiers;
+import waebric.java.rats.parser.Numbers;
+import waebric.java.rats.parser.Layout;
+
+Pair<Node> Arguments = Argument (void:",":Sym Argument)*;
+	
+generic Argument =
+	Identifier void:"=":Sym Expression
+	/ Expression;
+	
+generic Markup =
+	Designator void:"(":Sym Arguments? void:")":Sym 
+	/ Designator;
+	
+generic Designator = Identifier Attribute*;
+	
+generic Attribute =
+	"#":Sym Identifier
+	/ ".":Sym Identifier
+	/ "$":Sym Identifier
+	/ ":":Sym Identifier
+	/ "@":Sym Number "%":Sym Number 
+	/ "@":Sym Number; 
+	
+	

@@ -1,0 +1,26 @@
+module languages/waebric/syntax/Sites
+
+imports languages/waebric/syntax/Markup
+
+exports
+sorts Mapping FileName DirName Site Path FileExt Directory PathElement
+
+context-free syntax
+  "site" {Mapping ";"}* "end" -> Site   {cons("site")}   
+  Path ":" Markup       -> Mapping   {cons("mapping")}
+  DirName "/" FileName  -> Path    {cons("path")}  
+  FileName              -> Path    
+  Directory             -> DirName 
+
+context-free restrictions
+  DirName -/- ~[\/]
+  "/" -/- [\ \t\n\r\.\/\\]
+
+lexical syntax
+  ~[\ \t\n\r\.\/\\]+      -> PathElement  
+  [a-zA-Z0-9]+            -> FileExt      
+  {PathElement "/"}+      -> Directory    
+  PathElement "." FileExt -> FileName     
+
+lexical restrictions
+  FileExt -/- [a-zA-Z0-9]

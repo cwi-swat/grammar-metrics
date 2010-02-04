@@ -1,0 +1,10 @@
+module languages/waebric/syntax/Waebric
+
+imports 
+	languages/waebric/syntax/Comments
+	languages/waebric/syntax/Modules
+
+
+hiddens
+context-free start-symbols Module
+

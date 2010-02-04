@@ -1,0 +1,65 @@
+module OMeta
+
+imports Curly
+
+hiddens
+context-free start-symbols Grammar
+
+exports
+sorts Grammar Rule Symbol Param Code Exp
+
+context-free syntax
+ "ometa" Ident "<:" Ident "{" {Rule ","}* "}" Word* -> Grammar
+
+  Ident Param* "=" Symbol  -> Rule {class("Rule")}
+
+  ":" Ident -> Param
+
+  Block -> Code
+  Exp+ -> Code
+
+  Ident -> Exp
+  Bracket -> Exp   
+  "." -> Exp
+  String -> Exp
+
+  Ident -> Symbol {class("NonTerminal")}
+  String -> Symbol {class("Terminal")}
+  Symbol ":" Ident -> Symbol 
+
+  "listOf" "(" Symbol "," Symbol ")" -> Symbol {class("GrammarDecision")}
+  "cRange" "(" {Symbol ","}+ ")" -> Symbol
+  "fromTo" "(" Symbol "," Symbol ")" -> Symbol
+
+  "(" Symbol ")" -> Symbol {bracket}
+
+  "?" Bracket -> Symbol
+
+context-free syntax
+    "case"          -> Keyword {class("Decision")}
+    "catch"         -> Keyword {class("Decision")}
+    "for"           -> Keyword {class("Decision")}
+    "if"            -> Keyword {class("Decision")}
+    "while"         -> Keyword {class("Decision")}
+
+context-free priorities
+  {
+  "#" Symbol -> Symbol
+  "~" Symbol -> Symbol
+  "^" Symbol -> Symbol}
+  >
+  {Symbol "+" -> Symbol {class("GrammarDecision")}
+  Symbol "*" -> Symbol {class("GrammarDecision")}
+  Symbol "?" -> Symbol {class("GrammarDecision")}}
+  >
+  Symbol ":" Ident -> Symbol
+  >
+  Symbol Symbol -> Symbol {right}
+  >
+  Symbol "->" Code -> Symbol {class("Code")}
+  >
+  Symbol "|" Symbol -> Symbol {left, class("GrammarDecision")}
+  >
+  -> Symbol
+
+

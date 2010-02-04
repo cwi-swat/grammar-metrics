@@ -1,0 +1,28 @@
+module languages/waebric/syntax/Modules
+
+imports 
+	languages/waebric/syntax/Functions
+	languages/waebric/syntax/Sites
+
+exports
+
+sorts ModuleId Import ModuleElement Module
+
+context-free syntax
+  {IdCon "."}+ -> ModuleId {cons("module-id")}
+  "import" ModuleId  -> Import {cons("import")}
+
+  FunctionDef -> ModuleElement 
+  Import -> ModuleElement
+  Site -> ModuleElement
+  "module" ModuleId ModuleElement* -> Module {cons("module")}
+   
+context-free syntax
+  "module" -> IdCon {reject}
+  "import" -> IdCon {reject}
+  "def" -> IdCon {reject}
+  "end" -> IdCon {reject}
+  "site" -> IdCon {reject}
+
+
+

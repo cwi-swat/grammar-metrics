@@ -1,0 +1,258 @@
+%package "waebric.beaver";
+%import "waebric.ast.*";
+%class "WaebricParser";
+
+
+%terminals MODULE, IMPORT, DEF, END, SITE, LIST, RECORD, STRING, IF, ELSE, COMMENT, ECHO, CDATA, EACH, LET, IN, YIELD, IDCON;
+
+%terminals LPAREN, RPAREN, LBRACE, RBRACE, LBRACK, RBRACK;
+
+%terminals SEMICOLON, COMMA, DOT, COLON, MOD, ADDCHAR, DIV, QUESTION, NOT, ANDAND, OROR, EQ, PLUS ;
+
+%terminals DIRNAME, FILENAME;
+
+%terminals NATCON, STRCON, SYMBOLCON;
+
+
+%terminals PRETEXT, MIDTEXT, POSTTEXT, TEXT;
+
+%terminals IDCON;
+
+%terminals HASH, DOLLAR;
+
+
+
+%goal module;
+
+/* SDF specificatie: languages/waebric/syntax/Modules */
+
+module = MODULE moduleid.i moduleelement.e* {: //@module(i,[e]) :};
+
+moduleid = idcons.i  {: //@module-id([$i]) :};
+
+
+idcons = IDCON.i {: //$idconsa($i) :}
+| idcons.a DOT IDCON.b {: //$idconslist(a,$b) :}
+;
+
+
+moduleelement = functiondef
+| import
+| site
+;
+
+import = IMPORT moduleid.m {: //@import(m) :};
+
+/* SDF specificatie: languages/waebric/syntax/Functions */
+functiondef = DEF IDCON.i formals.f statement.s* END {: //@def($i,f,[s]) :};
+
+
+/* SDF specificatie: languages/waebric/syntax/Statements */
+
+assignment = IDCON.i EQ expression.e SEMICOLON {: //@var-bind($i,e) :}
+| IDCON.i assignmentformals.f EQ statement.s {: //@func-bind($i,f,s) :}
+;
+
+
+formals = {://@empty() :}
+| LPAREN formallist.f RPAREN {://@formals([$f]) :}
+;
+
+formallist = IDCON.i {: //$formal_a($i):}
+|  IDCON.a COMMA formallist.b {: //$formallist($a,b):}
+;
+
+assignmentformals = LPAREN RPAREN {: //[]emptyformallist() :}
+| LPAREN formallist.f RPAREN {: //[]assignmentformals(f) :}
+;
+
+/* SDF specificatie: languages/waebric/syntax/Expressions */
+
+var = IDCON.i {: //@var($i) :};
+
+expression = simpleexpression
+| expression.e DOT IDCON.i {: //@field(e,$i) :}
+| expression.e PLUS simpleexpression.f {: //@cat(e,f) :}
+;
+
+simpleexpression = var
+| symbolcon.s {: //@sym(s) :}
+| NATCON.n {: //@num(#n) :}
+| textexpression.t {: //@text(t) :}  
+| LBRACK expressions.e RBRACK {: //@list([e]) :}
+| LBRACE keyvaluepairs.party RBRACE  {: //@record([party]) :}
+;
+
+textexpression = TEXT.t {: //$text_expression($t) :};
+
+symbolcon = SYMBOLCON.s  {: //$sym_text($s) :};
+
+expressions = expression
+| expressions COMMA expression
+;
+
+
+keyvaluepairs = keyvaluepair
+| keyvaluepairs COMMA keyvaluepair
+;
+
+keyvaluepair = IDCON.i COLON expression.e  {: //@pair($i,e) :};
+
+/* SDF specificatie: languages/waebric/syntax/Embedding */
+
+
+texttail = MIDTEXT.m embed.e texttail.t {: //@mid($m,e,t) :}
+| POSTTEXT.p {: //@post($p) :}
+;
+
+embedding = PRETEXT.p embed.e texttail.t  {: //@pre($p,e,t) :};
+
+embed = markup.m+ expression.e {: //@exp-embedding([m],e) :}
+| expression.e 
+;
+
+
+
+
+/* SDF specificatie: languages/waebric/syntax/Markup */
+
+arguments = LPAREN argumentlist.a* RPAREN {: //@args([a]) :};
+
+argumentlist = argument
+| argument COMMA argumentlist
+;
+
+
+
+argument = IDCON.i EQ expression.e {: //@attr($i,e) :}
+| expression
+;
+
+markupWithArguments = designator.d arguments.a {: //@call(d,a) :} ;
+
+markup = markupWithArguments 
+| designator.d 
+;
+
+designator = IDCON.i attribute.a* {: //@tag($i,[a]) :} ;
+
+StatementWithoutSubstatement = StatementBlock
+| StatementCData
+| StatementYield
+| StatementComment
+| StatementMarkup
+| StatementEchoExpression
+| StatementEchoEmbedding
+| StatementLet
+;
+
+StatementWithoutSubAndMarkup = StatementBlock
+| StatementCData
+| StatementYield
+| StatementComment
+| StatementEchoExpression
+| StatementEchoEmbedding
+| StatementLet
+;
+
+statement = StatementWithoutSubstatement
+| StatementIf
+| StatementIfElse
+| StatementEach
+| StatementMarkupStatement
+;
+
+StatementNoShortIf = StatementWithoutSubstatement
+| StatementEachNoShortIf
+| StatementMarkupStatementNoShortIf
+;
+
+StatementWithoutMarkup = StatementWithoutSubAndMarkup
+| StatementIf
+| StatementIfElse
+| StatementEach
+;
+
+StatementWithoutMarkupNoShortIf = StatementWithoutSubAndMarkup
+| StatementEachNoShortIf
+;
+
+
+
+StatementIf = IF LPAREN predicate.p RPAREN statement.a  {: //@if(p,a) :};
+
+StatementIfElse = IF LPAREN predicate.p RPAREN StatementNoShortIf.a ELSE statement.b {: //@if-else(p,a,b) :};
+
+StatementEach = EACH LPAREN var COLON expression RPAREN statement ;
+
+StatementEachNoShortIf = EACH LPAREN var COLON expression RPAREN StatementNoShortIf ;
+
+StatementLet = LET assignment.a+ IN statement.s* END {: //@let([a],[s]) :};
+
+StatementBlock = LBRACE statement.s* RBRACE {: //@block([s]) :};
+ 
+
+
+
+StatementComment = COMMENT STRCON.s SEMICOLON	{: //@comment($s) :};
+StatementEchoExpression = ECHO expression.e SEMICOLON	{: //@echo(e) :};
+StatementEchoEmbedding = ECHO embedding.e SEMICOLON	{: //@echo-embedding(e) :};
+StatementCData = CDATA expression.e SEMICOLON	{: //@cdata(e) :};
+StatementYield = YIELD SEMICOLON	{: //@yield() :};
+    
+StatementMarkup = markup.m SEMICOLON {: //@markup(m) :}
+| markup.s+ markupWithArguments.m SEMICOLON {: //@markup-markup([s],m) :}
+| markup.s+ expression.e SEMICOLON {: //@markup-exp([s],e) :}
+| markup.s+ embedding.e SEMICOLON {: //@markup-embedding([s],e) :}
+;
+
+StatementMarkupStatement = markup.m+ StatementWithoutMarkup.s {: //@markup-stat([m],s) :};
+
+StatementMarkupStatementNoShortIf = markup.m+ StatementWithoutMarkupNoShortIf.s{: //@markup-stat([m],s) :};
+
+
+
+attribute = HASH IDCON.i {: //@id($i) :}
+//| DOT IDCON.i	{: //@class($i) :}
+| DOLLAR IDCON.i {: //@name($i) :}
+| COLON IDCON.i {: //@type($i) :}
+| ADDCHAR NATCON.w MOD NATCON.h	{: //@width-height(#w,#h) :}
+| ADDCHAR NATCON.w {: //@height(#w) :}  
+;
+
+
+/* SDF specificatie: languages/waebric/syntax/Sites */
+site = SITE mappings.m* END {: //@site([m]) :};
+
+
+mappings = mapping
+| mapping SEMICOLON mappings
+;
+
+mapping = path.p COLON markup.m {: //@mapping(p,m) :};
+
+path = DIRNAME.d DIV FILENAME.f {: //@path($d,$f) :}
+| FILENAME.f  {: //$filenamestring($f) :}
+;
+
+/* SDF specificatie: languages/waebric/syntax/Predicates */
+
+type = LIST {: //@list-type() :}
+| RECORD {: //@record-type() :} 
+| STRING {: //@string-type() :}
+;
+
+
+simplepredicate = expression
+| expression.e DOT type.t QUESTION {: //@is-a(e,t) :}
+| NOT simplepredicate.p {: //@not(p) :}
+;
+
+conjunction = predicate.p ANDAND simplepredicate.q {: //@and(p,q) :};
+
+predicate = simplepredicate
+| conjunction
+| predicate.p OROR simplepredicate.q {: //@or(p,q) :}
+;
+
+

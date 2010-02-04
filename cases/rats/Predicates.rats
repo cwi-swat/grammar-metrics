@@ -1,0 +1,22 @@
+module waebric.java.rats.parser.Predicates;
+
+import waebric.java.rats.parser.Identifiers;
+import waebric.java.rats.parser.Expressions;
+
+// Can these still be in reserved this way?
+String Type = 
+	"list":Identifier
+	/ "record":Identifier
+	/ "string":Identifier;
+	
+generic Predicate =
+	<And> Predicate void:"&&":Sym Unary @AndPredicate 
+	/ <Or> Predicate void:"||":Sym Unary @OrPredicate
+	/ <Unary> Unary; 
+
+generic Unary = '!' Unary / Condition;
+
+// TODO: this is amb in Waebric: x + y.string? Or is there a prio?
+generic Condition = Postfix '.' Type '?' / Expression;
+	
+

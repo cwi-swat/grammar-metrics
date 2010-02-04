@@ -1,0 +1,47 @@
+module languages/waebric/syntax/Markup
+
+imports languages/waebric/syntax/Expressions
+        languages/waebric/syntax/Statements
+        languages/waebric/syntax/Embedding
+
+hiddens
+context-free start-symbols Markup
+
+exports
+sorts Markup Designator Attribute Arguments Argument
+
+context-free syntax
+  "(" {Argument ","}* ")" -> Arguments {cons("args")} 
+  IdCon "=" Expression -> Argument  {cons("attr")}
+  Expression         -> Argument 
+
+context-free syntax
+  Designator Arguments -> Markup {cons("call")}
+  Designator -> Markup
+
+context-free priorities
+  Markup+ Statement -> Statement {cons("markup-stat"),non-assoc}
+  >
+  {
+  Markup ";" -> Statement {cons("markup")}
+  Markup+ Markup ";" -> Statement {cons("markup-markup")}
+  Markup+ Expression ";" -> Statement {cons("markup-exp")}
+  Markup+ Embedding ";" -> Statement {cons("markup-embedding")}
+  }
+
+context-free priorities
+  Markup+ Markup ";" -> Statement
+  >
+  Designator -> Markup 
+
+context-free syntax
+  IdCon Attribute* -> Designator {cons("tag")}
+
+context-free syntax
+  "#" IdCon                 -> Attribute {cons("id")}
+  "." IdCon                 -> Attribute {cons("class")}  
+  "$" IdCon                 -> Attribute {cons("name")}  
+  ":" IdCon                 -> Attribute {cons("type")} 
+  "@" w:NatCon "%" h:NatCon -> Attribute {cons("width-height")}
+  "@" w:NatCon              -> Attribute {cons("height")}
+

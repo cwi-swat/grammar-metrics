@@ -1,0 +1,24 @@
+module languages/waebric/syntax/Predicates
+
+imports languages/waebric/syntax/Expressions
+
+exports
+
+sorts Predicate Type
+
+context-free syntax
+ "list" -> Type {cons("list-type")}
+ "record" -> Type {cons("record-type")}
+ "string" -> Type {cons("string-type")}
+
+context-free syntax
+  Expression -> Predicate
+  Expression "." Type "?" -> Predicate {cons("is-a")}
+
+context-free priorities
+  "!" Predicate -> Predicate {cons("not")}
+  >
+  {left:
+   Predicate "&&" Predicate -> Predicate {cons("and"), left}
+   Predicate "||" Predicate -> Predicate {cons("or"), left}
+  }

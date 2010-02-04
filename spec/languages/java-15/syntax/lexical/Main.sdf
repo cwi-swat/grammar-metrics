@@ -1,0 +1,15 @@
+%%%
+ %% Chapter 3: Lexical Structure
+ %%
+ %% @author Martin Bravenboer <martin@cs.uu.nl>
+ %%%
+module languages/java-15/syntax/lexical/Main
+imports
+  languages/java-15/syntax/lexical/UnicodeEscapes
+  languages/java-15/syntax/lexical/LineTerminators
+  languages/java-15/syntax/lexical/WhiteSpace
+  languages/java-15/syntax/lexical/Comments
+  languages/java-15/syntax/lexical/Identifiers
+  languages/java-15/syntax/lexical/Keywords
+  languages/java-15/syntax/lexical/Modifiers
+  languages/java-15/syntax/lexical/literals/Main

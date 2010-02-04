@@ -1,0 +1,20 @@
+module languages/waebric/syntax/Comments
+
+exports
+
+sorts Comment CommentChar Asterisk
+
+lexical syntax
+    "/*" CommentChar* "*/" -> Comment {category("Comment")}
+    ~[\*] -> CommentChar
+    Asterisk -> CommentChar
+    Comment -> LAYOUT
+    [\*] -> Asterisk
+    "//" ~[\n]* [\n] -> Comment {category("Comment")}
+
+lexical restrictions
+    Asterisk -/- [\/]
+
+context-free restrictions
+    LAYOUT? -/- [\/].[\/]
+    LAYOUT? -/- [\/].[\*]

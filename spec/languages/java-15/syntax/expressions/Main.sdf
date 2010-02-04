@@ -1,0 +1,23 @@
+%%%
+ %% Chapter 15: Expressions
+ %%
+ %% @author  Martin Bravenboer <martin@cs.uu.nl>
+ %%%
+module languages/java-15/syntax/expressions/Main
+imports
+  languages/java-15/syntax/expressions/Primary
+  languages/java-15/syntax/expressions/ClassInstanceCreation
+  languages/java-15/syntax/expressions/ArrayCreation
+  languages/java-15/syntax/expressions/FieldAccess
+  languages/java-15/syntax/expressions/ArrayAccess
+  languages/java-15/syntax/expressions/MethodInvocation
+  languages/java-15/syntax/expressions/Postfix
+  languages/java-15/syntax/expressions/UnaryOperators
+  languages/java-15/syntax/expressions/BinaryOperators
+  languages/java-15/syntax/expressions/AssignmentOperators
+  languages/java-15/syntax/expressions/Restrictions
+  languages/java-15/syntax/expressions/Priorities
+
+exports
+  sorts
+    Expr

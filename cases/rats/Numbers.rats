@@ -1,0 +1,8 @@
+module waebric.java.rats.parser.Numbers;
+
+import waebric.java.rats.parser.Layout;
+
+generic Number = Digits Spacing;
+
+String Digits = [0-9]+;
+

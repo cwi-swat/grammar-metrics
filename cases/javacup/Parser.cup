@@ -1,0 +1,460 @@
+package waebric;
+
+import java_cup.runtime.*;
+import java.io.FileInputStream;
+import waebric.node.*;
+
+parser code {:
+
+	/* override error routines */
+  
+  	public void report_fatal_error(String message, Object info)
+    {
+    	done_parsing();
+      	if (info instanceof Symbol) 
+      		System.err.println("Fatal: " + message + " \nCan't recover from previous error(s), giving up. @ " + (Symbol)info);     		
+      	else 
+      		System.err.println("Fatal: " + message + " \nCan't recover from previous error(s), giving up. @ " + cur_token);
+      	throw new RuntimeException(new ParseException(message));
+    }
+
+    public void report_error(String message, Object info)
+    {
+    	if (info instanceof Symbol)
+    		System.err.println("Error: " + message + " @ " + (Symbol)info);        	
+      	else
+        	System.err.println("Error: " + message + " @ " + cur_token);
+      	throw new RuntimeException(new ParseException(message));
+    }
+:};
+
+terminal MODULE, IMPORT, SITE, SLASH, COLON, LPAREN, RPAREN, END, DEF, LBRACE, RBRACE, SEMI, DOT,
+		 COMMA, NUMBER_SIGN, DOLLAR_SIGN, AT_SIGN, PERCENT_SIGN, ASSIGN, CDATA, COMMENT, ECHO, IN,
+		 EACH, LET, ELSE, YIELD, RECORD, LIST, IF, STRING, LBRACKET, RBRACKET, QUESTIONMARK,
+		 EXCLAMATION, AND, OR;
+terminal String IDCON, SYMBOLCON, TEXT, DIRECTORY, FILENAME, PRETEXT, POSTTEXT, MIDTEXT, STRCON;
+terminal Integer NATCON;
+
+non terminal Embedding embedding;
+non terminal Texttail texttail;
+non terminal Embed embed;
+non terminal Module module;
+non terminal ModuleId module_id;
+non terminal ImportDeclaration import_decl;
+non terminal Site site;
+non terminal Mapping mapping;
+non terminal MappingList mappings;
+non terminal Path path;
+non terminal ModuleElementList module_elements, module_elements_star;
+non terminal ModuleElement module_element;
+non terminal Def function;
+non terminal FormalList formals, formal_star, formal_plus;
+non terminal Attribuut attribuut;
+non terminal AttribuutList attribuut_plus, attribuut_star;
+non terminal Statement statement, statement_no_markup;
+non terminal StatementList statement_plus, statement_star;
+non terminal Designator designator;
+non terminal Argument argument;
+non terminal Args arguments, argument_plus, argument_star;
+non terminal Markup markup, markup_no_designator;
+non terminal MarkupList markup_plus, markup_star;
+non terminal Expression expression, expression_no_idcon;
+non terminal ExpressionList expression_plus, expression_star;
+non terminal Keyvaluepair keyvaluepair;
+non terminal KeyvaluepairList keyvaluepair_plus, keyvaluepair_star;
+non terminal Assignment assignment;
+non terminal AssignmentList assignment_plus;
+non terminal Predicate predicate, predicate_no_and_or;
+non terminal Tiepe type;
+
+precedence right ELSE;
+precedence left IDCON; /* Oplossing voor shift/reduce between markup_star ::= (*) and designator ::= (*) IDCON attribuut_star */
+precedence left DOT; /* s/r ivm expression . idcon */
+start with module;
+	
+module_id ::= 
+	IDCON:id 
+		{: RESULT = new ModuleId(id); :} 
+	| module_id:m DOT IDCON:id
+		{:
+			m.append(id);
+			RESULT = m;
+		:}	
+	;
+
+import_decl ::=
+	IMPORT module_id:id
+		{: RESULT = new ImportDeclaration(id); :}
+	;
+	
+module_element ::=
+	import_decl:id 
+		{: RESULT = id; :}
+	| function:fun 
+		{: RESULT = fun; :} 
+	| site:s 
+		{: RESULT = s; :} 
+	;
+
+module_elements ::=	
+	module_element:element
+		{: RESULT = new ModuleElementList(element); :}	
+	| module_elements:elements module_element:element
+		{:
+			elements.append(element);
+			RESULT = elements; 
+		:}
+	;
+	
+module_elements_star ::=
+	/* leeg */
+		{: RESULT = new ModuleElementList(); :}
+	| module_elements:mes 
+		{: RESULT = mes; :}
+	;
+
+module ::=
+	MODULE module_id:moduleId module_elements_star:mes
+		{: RESULT = new Module(moduleId, mes); :}		
+	;
+  
+formal_plus ::=
+	IDCON:id
+		{: 
+			Formal0 idcon = new Formal0(id);
+			RESULT = new FormalList(idcon); 
+		:}
+	| formal_plus:list COMMA IDCON:id
+		{:
+			Formal0 formal = new Formal0(id);
+			list.append(formal);
+			RESULT = list; 
+		:}
+	;
+  
+formal_star ::=
+	/* leeg */ 
+		{: 
+			Empty empty = new Empty();			
+			RESULT = new FormalList(empty);
+		:}
+	| formal_plus:list
+		{: RESULT = list; :}
+	;
+  
+formals ::=
+	/* leeg */
+		{:
+			Empty empty = new Empty(); 
+			RESULT = new FormalList(empty); 
+		:}
+	| LPAREN formal_star:formals RPAREN
+ 		{: RESULT = formals; :}
+	;
+
+function ::=
+	DEF IDCON:i formals:f statement_star:s END
+		{: RESULT = new Def(i,f,s); :}
+	;
+ 	
+site ::=
+	SITE mappings:m END
+		{: RESULT = new Site(m); :}
+	;
+	
+mappings ::=
+	mapping:m 
+		{: RESULT = new MappingList(m); :} 
+	| mappings:mlist SEMI mapping:m
+		{: 
+			mlist.append(m);
+			RESULT = mlist;
+		:}
+	;
+
+mapping ::=
+	path:p COLON markup:m
+		{: RESULT = new Mapping(p,(Markup) m); :}
+	;
+
+path ::=
+	FILENAME:filename 
+		{: RESULT = new Path("",filename); :}
+	| DIRECTORY:dir SLASH FILENAME:file
+		{: RESULT = new Path(dir, file); :}
+	;
+
+designator ::=
+	IDCON:id attribuut_star:as
+		{: RESULT = new Tag(id,as); :}
+	;
+
+markup_no_designator ::=
+	designator:d  arguments:args 
+		{: RESULT = new Call(d,args); :}
+	;
+
+markup ::=	
+	designator:d
+		{: RESULT = new Markup0(d) ; :} 
+	| markup_no_designator:m
+		{: RESULT = m; :}	
+	;
+	
+markup_plus ::=
+	markup:markup
+		{: RESULT = new MarkupList((Markup)markup); :}	
+    | markup_plus:mlist markup:markup
+		{:
+			mlist.append((Markup)markup);
+			RESULT = mlist; 
+		:}
+	;
+	
+markup_star ::=
+	/* leeg */
+		{: RESULT = new MarkupList(); :}
+	| markup_plus:mlist
+		{: RESULT = mlist; :}
+	;	
+
+statement_no_markup ::=	
+	IF LPAREN predicate:p RPAREN statement:s
+		{: RESULT = new Iff(p,s); :}
+	| IF LPAREN predicate:p RPAREN statement:s1 ELSE statement:s2
+		{: RESULT = new IfElse(p,s1,s2); :}
+	| EACH LPAREN IDCON:id COLON expression:e RPAREN statement:s
+		{: RESULT = new Each(id,e,s); :}
+	| LET assignment_plus:ap IN statement_star:as END
+		{: RESULT = new Let(ap,as); :}
+	| LBRACE statement_star:s RBRACE
+		{: RESULT = new Block(s); :}
+	| COMMENT STRCON:id SEMI
+		{: RESULT = new Comment(id); :}
+	| ECHO expression:e SEMI
+		{: RESULT = new Echo(e); :} 
+	| ECHO embedding:e SEMI
+		{: RESULT = new EchoEmbedding(e); :}
+	| CDATA expression:e SEMI
+		{: RESULT = new CData(e); :} 
+	| YIELD SEMI
+		{: RESULT = new Yield(); :}
+	;
+		
+statement ::=
+	statement_no_markup:s
+		{: RESULT = s; :}
+	| markup_plus:mp statement_no_markup:s
+		{: RESULT = new MarkupStat(mp,s); :}
+	| markup:m SEMI
+		{: RESULT = new Opmaak(m); :} 
+	| markup_plus:mp markup_no_designator:m SEMI
+		{: RESULT = new MarkupMarkup(mp,m); :}
+	| markup_plus:mp expression_no_idcon:e SEMI
+		{: RESULT = new MarkupExp(mp,e); :}
+	| markup_plus:mp embedding:e SEMI
+		{: RESULT = new MarkupEmbeddingg(mp,e); :}
+	;			
+	
+statement_plus ::=
+	statement:statement
+		{: RESULT = new StatementList(statement); :}	
+	| statement_plus:slist statement:statement
+		{:
+			slist.append(statement);
+			RESULT = slist; 
+		:}
+	;
+	
+statement_star ::=
+	/* leeg */ 
+		{: RESULT = new StatementList(); :}
+	| statement_plus:slist
+		{: RESULT = slist; :}
+	;
+
+expression_no_idcon ::=
+	TEXT:t 
+		{: RESULT = new Text(t); :} 
+	| NATCON:n 
+		{: RESULT = new Num(n.toString()); :} 
+	| SYMBOLCON:s 
+		{: RESULT = new Symb(s); :} 
+	| LBRACKET expression_star:e RBRACKET
+		{: RESULT = new List(e); :} 
+	| LBRACE keyvaluepair_plus:klist RBRACE /* zou eigenlijk star moeten zijn */
+		{: RESULT = new Record(klist); :}	
+	;
+
+expression ::=
+	expression_no_idcon:e 
+		{: RESULT = e; :}
+	| IDCON:id
+		{: RESULT = new Var(id); :}
+	| expression_no_idcon:e DOT IDCON:id
+		{: RESULT = new Field(e, id); :}
+	;	
+	
+expression_plus ::=
+	expression:expression 
+		{: RESULT = new ExpressionList(expression); :}	
+    | expression_plus:elist COMMA expression:expression
+		{:
+			elist.append(expression);
+			RESULT = elist; 
+		:}
+	;
+	
+expression_star ::=
+	/* leeg */ 
+		{: RESULT = new ExpressionList(); :}
+	| expression_plus:elist
+		{: RESULT = elist; :}
+	;
+	
+keyvaluepair ::=
+	IDCON:id COLON expression:e
+		{: RESULT = new Keyvaluepair(id,e); :}
+	;
+	
+keyvaluepair_plus ::=
+	keyvaluepair:keyvaluepair
+		{: RESULT = new KeyvaluepairList(keyvaluepair); :}
+	| keyvaluepair_plus:klist COMMA keyvaluepair:keyvaluepair
+		{:
+			klist.append(keyvaluepair);
+			RESULT = klist; 
+		:}
+	;
+	
+keyvaluepair_star ::=
+	/* leeg */ 
+		{: RESULT = new KeyvaluepairList(); :} 
+	| keyvaluepair_plus:klist
+		{: RESULT = klist; :}
+	;
+	
+attribuut ::=
+	NUMBER_SIGN IDCON:id 
+		{: RESULT = new Id(id); :} |
+	DOT IDCON:id 
+		{: RESULT = new Classs(id); :} |
+	DOLLAR_SIGN IDCON:id 
+		{: RESULT = new Name(id); :} |
+	COLON IDCON:id 
+		{: RESULT = new Type(id); :} |
+	AT_SIGN NATCON:nc1 PERCENT_SIGN NATCON:nc2 
+		{: RESULT = new WidthHeight(nc1, nc2); :} |
+	AT_SIGN NATCON:nc 
+		{: RESULT = new Height(nc); :}	
+	;
+	
+attribuut_plus ::=	
+	attribuut:attribuut
+		{: RESULT = new AttribuutList(attribuut); :}
+	| attribuut_plus:alist attribuut:attribuut
+		{:
+			alist.append(attribuut);
+			RESULT = alist; 
+		:}
+	; 
+	
+attribuut_star ::=
+	/* leeg */ 
+		{: RESULT = new AttribuutList(); :}
+	| attribuut_plus:alist
+		{: RESULT = alist; :}
+	;
+	
+argument ::=
+	expression:e
+		{: RESULT = new Argument0(e); :}
+	| IDCON:id ASSIGN expression:expr
+		{: RESULT = new Attri(id, expr); :}
+	;
+	
+argument_plus ::=	
+	argument:arg
+		{: RESULT = new Args(arg); :}	
+	| argument_plus:alist COMMA argument:arg
+		{:
+			alist.append(arg);
+			RESULT = alist; 
+		:}
+	; 
+		
+argument_star ::=
+	/* leeg */ 
+		{: RESULT = new Args(); :}
+	| argument_plus:alist
+		{: RESULT = alist; :}
+	;
+	
+arguments ::=
+	LPAREN argument_star:args RPAREN
+		{: RESULT = args; :}
+	;
+	
+/* formal_star is hetzelfde als {IdCon ","}* */
+assignment ::=
+	IDCON:id LPAREN formal_star:fl RPAREN ASSIGN statement:s
+		{: RESULT = new FuncBind(id, fl, s); :}
+	| IDCON:id ASSIGN expression:e SEMI
+		{: RESULT = new VarBind(id,e); :}
+	;
+	
+assignment_plus ::=
+	assignment:assignment
+		{: RESULT = new AssignmentList(assignment); :}
+	| assignment_plus:alist assignment:assignment
+		{:
+			alist.append(assignment);
+			RESULT = alist;
+		:}
+	;
+	
+texttail ::=
+	POSTTEXT:text
+		{: RESULT = new Post(text); :}
+	| MIDTEXT:text embed:e texttail:t
+		{: RESULT = new Mid(text, e,t); :}
+	;
+	
+embedding ::=
+	PRETEXT:text embed:e texttail:t
+		{: RESULT = new Pre(text, e,t); :}
+	;
+	
+embed ::=
+	markup_star:ms expression:e
+		{: RESULT = new ExpEmbedding(ms,e); :}
+	| markup_star:ms markup_no_designator:m
+		{: RESULT = new MarkupEmbedding(ms,m); :}
+	;
+	
+type ::=
+	LIST
+		{: RESULT = new ListType(); :}
+	| RECORD
+		{: RESULT = new RecordType(); :}
+	| STRING
+		{: RESULT = new StringType(); :}
+	;
+	
+predicate ::=
+	predicate_no_and_or:p
+		{: RESULT = new Not(p); :}
+	| predicate_no_and_or:p1 AND predicate:p2
+		{: RESULT = new And(p1,p2); :}
+	| predicate_no_and_or:p1 OR predicate:p2
+		{: RESULT = new Or(p1,p2); :}
+	;
+	
+predicate_no_and_or ::=
+	expression:e
+		{: RESULT = new Predicate0(e); :}
+	| expression:e DOT type:t QUESTIONMARK
+		{: RESULT = new IsA(e,t); :}
+	| EXCLAMATION predicate_no_and_or:p
+		{: RESULT = p; :}
+	;

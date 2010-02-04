@@ -1,0 +1,137 @@
+module CSharp
+
+imports Curly
+
+hiddens
+context-free start-symbols
+  Source
+
+exports
+sorts Keyword Class Dummy Dim Arg Type TypeArg Num
+
+context-free syntax
+    Class -> Word {class("Class")}
+
+    "class" Ident Arg* Block -> Class
+ 
+     
+
+    "new" {Ident "."}+ TypeArg? Bracket Block -> Class
+    "new" {Ident "."}+ TypeArg? Block -> Class
+    "new" {Type "."}+ TypeArg? Dim+ Block -> Word
+    "new" {Type "."}+ TypeArg? Dim+ Dummy -> Word
+    "new" {Type "."}+ TypeArg? Bracket Dummy -> Word
+
+    "<" {Type","}+ ">" -> TypeArg
+
+    Keyword -> Type
+    Ident -> Type
+
+    -> Dummy
+    "[" Num? "]" -> Dim
+
+
+    "private" "new" -> Word
+    "public" "new" -> Word
+
+    ".class" -> Word
+
+lexical syntax
+	[0-9]+ -> Num
+lexical restrictions
+   Num -/- [0-9]
+
+context-free restrictions
+   Dummy -/- [\{a-zA-Z]
+   Keyword -/- [0-9a-zA-Z\_\$]
+   "new" -/- [0-9a-zA-Z\_\$]
+
+context-free priorities
+    Keyword -> Word
+    >
+    {"class" -> Keyword
+     "new" -> Keyword}
+,
+     Word -> Arg
+     >
+     Block -> Word
+
+
+context-free syntax
+"abstract" -> Keyword
+"event" -> Keyword
+"new" -> Keyword
+"struct" -> Keyword
+"as" -> Keyword
+"explicit" -> Keyword
+"null" -> Keyword
+"switch" -> Keyword
+"base" -> Keyword
+"extern" -> Keyword
+"object" -> Keyword
+"this" -> Keyword
+"bool" -> Keyword
+"false" -> Keyword
+"operator" -> Keyword
+"throw" -> Keyword
+"break" -> Keyword
+"finally" -> Keyword
+"out" -> Keyword
+"true" -> Keyword
+"byte" -> Keyword
+"fixed" -> Keyword
+"override" -> Keyword
+"try" -> Keyword
+"case" -> Keyword {class("Decision")}
+"float" -> Keyword
+"params" -> Keyword
+"typeof" -> Keyword
+"catch" -> Keyword {class("Decision")}
+"for" -> Keyword {class("Decision")}
+"private" -> Keyword
+"uint" -> Keyword
+"char" -> Keyword
+"foreach" -> Keyword {class("Decision")}
+"protected" -> Keyword
+"ulong" -> Keyword
+"checked" -> Keyword
+"goto" -> Keyword
+"public" -> Keyword
+"unchecked" -> Keyword
+"class" -> Keyword
+"if" -> Keyword {class("Decision")}
+"readonly" -> Keyword
+"unsafe" -> Keyword
+"const" -> Keyword
+"implicit" -> Keyword
+"ref" -> Keyword
+"ushort" -> Keyword
+"continue" -> Keyword
+"in" -> Keyword
+"return" -> Keyword
+"using" -> Keyword
+"decimal" -> Keyword
+"int" -> Keyword
+"sbyte" -> Keyword
+"virtual" -> Keyword
+"default" -> Keyword
+"interface" -> Keyword
+"sealed" -> Keyword
+"volatile" -> Keyword
+"delegate" -> Keyword
+"internal" -> Keyword
+"short" -> Keyword
+"void" -> Keyword
+"do" -> Keyword
+"is" -> Keyword
+"sizeof" -> Keyword
+"while" -> Keyword {class("Decision")}
+"double" -> Keyword
+"lock" -> Keyword
+"stackalloc" -> Keyword
+"else" -> Keyword
+"long" -> Keyword
+"static " -> Keyword
+"enum" -> Keyword
+"namespace" -> Keyword
+"string" -> Keyword

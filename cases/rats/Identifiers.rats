@@ -1,0 +1,37 @@
+module waebric.java.rats.parser.Identifiers;
+
+import waebric.java.rats.parser.Layout;
+
+body {
+  static {
+    add(RESERVED, new String[] {
+	"module",
+	"site",
+	"import",
+	"def",
+	"end",
+	"if",
+	"else",
+	"each",
+	"echo",
+	"comment",
+	"let",
+	"in",
+	"yield",
+	"cdata"
+    });
+  }
+}
+
+option setOfString(RESERVED);
+
+String Sym = SymChar Spacing;
+
+transient String SymChar = [#$=?%@,&|+:{}\[\]();.<>];  
+
+String Identifier = yyValue:Word &{ !contains(RESERVED, toText(yyValue)) } ;
+
+String Word = WordCharacters Spacing ;
+
+String WordCharacters = [a-zA-Z][\-a-zA-Z0-9]*;
+	

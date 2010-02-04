@@ -1,0 +1,30 @@
+module languages/waebric/syntax/Text
+
+hiddens
+context-free start-symbols
+  Text
+
+exports
+
+sorts Text TextChar EscQuote Amp TextCharRef TextEntityRef
+
+lexical syntax
+  "\"" TextChar* "\"" -> Text 
+  ~[\0-\31\&\"\<\128-\255] \/ [\n\r\t]  -> TextChar
+  [\\][\"] -> EscQuote
+  [\&] -> Amp
+  Amp -> TextChar
+  EscQuote -> TextChar
+  TextCharRef -> TextChar {category("Constant")}
+  TextEntityRef -> TextChar {category("Constant")}
+ 
+
+  %% Copied from XML grammar
+  "&#" [0-9]+ ";"        -> TextCharRef    
+  "&#x" [0-9a-fA-F]+ ";" -> TextCharRef    
+  "&" [a-zA-Z\_\:] [a-zA-Z0-9\.\-\_\:]* ";"   -> TextEntityRef  
+  
+
+lexical restrictions
+  Amp -/- [\#0-9a-zA-Z\_\:]
+

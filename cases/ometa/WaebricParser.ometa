@@ -1,0 +1,198 @@
+/**
+ * OMeta parser for Waebric language
+ *
+ * The WaebricOMetaParser converts a Waebric program into an AST (Module).
+
+ * Imports in the Waebric program are automatically loaded from the filesystem and parsed
+ * to an new AST (Module). The new AST is then added to the parent AST (Module) under the
+ * property "dependencies".
+ *
+ * Translated from the SDF specification (Meta-Environment: www.meta-environment.org/):
+ * http://code.google.com/p/waebric/source/browse/trunk/doc/waebric.pdf
+ *
+ * @author Nickolas Heirbaut [nickolas.heirbaut@dejasmijn.be]
+ */
+
+ometa WaebricOMetaParser <: Parser {
+
+  Module          	= "module" spaces ModuleId:moduleId spaces ModuleElement*:moduleElements spaces end
+                    -> {
+                    		//Construct Module AST object
+                    		var module = new Module(moduleId, moduleElements)
+
+                    		//Add the dependencies to the module
+                    		module.dependencies = WaebricOMetaParser.currentDependencies;
+
+                    		//Return the original AST object
+                    		module;
+                    	},
+
+  ModuleId        	= listOf(#IdCon, "."):moduleId -> 	new ModuleId(moduleId.join('.')),
+
+  ModuleElement   	= Site
+                  	| FunctionDef
+                  	| Import,
+
+  Import			= "import" ModuleId:moduleId
+  					-> 	{
+	  						//Construct Import AST object
+	  						var imprt = new Import(moduleId);
+
+	  						//Parse dependency
+	  						//Updates the envrionment variable of the subparser (i.e. the WaebricOMetaValidator)
+	  						//Updates the dependencies variable of the rootparser (WaebricOMetaParser)
+	  						WaebricDependencyParser.parse(imprt, WaebricOMetaParser, WaebricOMetaParser.subParser);
+
+	  						//Return the original AST object
+	  						imprt;
+  						},
+
+  Site            	= "site" listOf(#Mapping, ';'):mappings "end" -> new Site(mappings),
+  Mapping         	= spaces Path:path spaces ":" Markup:markup -> new Mapping(path, markup),
+
+  Path            	= Directory:dir FileName:file -> new Path(dir.toString().substring(0, dir.length - 1), file)
+                    | FileName,
+  Directory       	= PathElement+:pathElement -> pathElement.join(''),
+  PathElement       = PathChar+:elem "/":sep -> elem.join('').concat(sep),
+  PathChar        	= cRange('!', '-') | cRange('0','[') | cRange(']','~'),
+  FileName        	= FileChar+:fileChar '.' FileExt:fileExt spaces -> (fileChar.join('').concat('.').concat(fileExt.join(''))),
+  FileChar        	= PathChar,
+  FileExt         	= letterOrDigit+,
+
+  Markup          	= Designator:designator Arguments:arguments -> new MarkupCall(designator, arguments)
+                  	| Designator,
+
+  MarkupNoExprStmt	= Designator:designator Arguments:arguments -> new MarkupCall(designator, arguments)
+  					| Designator:tag ~";" -> tag,
+
+  MarkupNoExprEmbed = Designator:designator Arguments:arguments -> new MarkupCall(designator, arguments)
+  					| Designator:tag ~">" -> tag,
+
+  Designator      	= IdCon:identifier Attribute*:attributes ~"+" -> new DesignatorTag(identifier, attributes),
+  Attribute       	= "#" spaces IdCon:idCon -> new IdAttribute(idCon)
+                    | "." spaces IdCon:idClass -> new ClassAttribute(idClass)
+                    | "$" spaces IdCon:idName -> new NameAttribute(idName)
+                    | ":" spaces IdCon:idType -> new TypeAttribute(idType)
+                  	| "@" spaces NatCon:width spaces "%" spaces NatCon:height  -> new WidthHeightAttribute(width, height)
+                  	| "@" spaces NatCon:width -> new WidthAttribute(width),
+  Arguments       	= spaces "(" listOf(#Argument, ','):args ")" spaces -> args ,
+  Argument        	= IdCon:variable "=" Expression:expression -> new Argument(variable, expression)
+                  	| Expression,
+
+  FunctionDef     	= "def" FunctionDefId:functionName Formals:formals spaces Statement*:statements spaces "end" -> new FunctionDefinition(functionName, formals, statements)
+                  	| "def" FunctionDefId:functionName Statement*:statements spaces "end" -> new FunctionDefinition(functionName, [], statements),
+
+  Formals         	= "(" listOf(#IdCon, ','):formals ")" -> formals,
+
+  Expression      	= Expression:expression "." IdCon:field ~"?" -> new FieldExpression(expression,field)
+					| Expression:expressionLeft "+" Expression:expressionRight ~"?" -> new CatExpression(expressionLeft, expressionRight)
+                  	| spaces Text:idText spaces -> new TextExpression(idText)
+                  	| spaces IdCon:idCon spaces -> new VarExpression(idCon)
+                  	| spaces NatCon:idNatCon spaces -> new NatExpression(idNatCon)
+                  	| spaces SymbolCon:idSymbolCon spaces -> new SymbolExpression(idSymbolCon)
+                  	| spaces "[" listOf(#Expression, ','):list "]" spaces -> new ListExpression(list)
+                  	| spaces "{" listOf(#KeyValuePair, ','):records "}" spaces -> new RecordExpression(records)
+                  	,
+
+
+  KeyValuePair    	= IdCon:key ":" Expression:value -> new KeyValuePair(key, value),
+
+  Statement       	= "if" spaces "(" Predicate:predicate ")" spaces Statement:ifStatement NoElseMayFollow -> new IfStatement(predicate, ifStatement)
+    				| "if" spaces "(" Predicate:predicate ")" spaces Statement:ifStatement spaces "else" spaces Statement:elseStatement  -> new IfElseStatement(predicate, ifStatement, elseStatement)
+  		            | "each" spaces "(" spaces EachIdentifier:identifier spaces ":" spaces Expression:expression spaces ")" spaces Statement:statement -> new EachStatement(identifier, expression, statement)
+    	           	| "let" Assignment+:assignments "in" spaces Statement*:statements spaces "end" -> new LetStatement(assignments, statements)
+	             	| "{" spaces Statement*:statements spaces "}" -> new BlockStatement(statements)
+                  	| "comment" spaces StrCon:comment spaces ";" -> new CommentStatement(comment)
+                  	| "echo" Expression:expression spaces ";" -> new EchoStatement(expression)
+                  	| "echo" Embedding:embedding spaces ";" -> new EchoEmbeddingStatement(embedding)
+                  	| "cdata" Expression:expression spaces ";" -> new CDataExpression(expression)
+                  	| "yield" ";" -> new YieldStatement()
+                  	| Markup:markup ";" -> new MarkupStatement(markup)
+                  	| MarkupNoExprStmt+:markups Expression:expression spaces ";" -> new MarkupExpressionStatement(markups, expression)
+                  	| Markup+:markups ";" -> new MarkupMarkupStatement(markups)
+                  	| Markup+:markups Statement:statement -> new MarkupStatementStatement(markups, statement)
+                  	| Markup+:markups Embedding:embedding ";" -> new MarkupEmbeddingStatement(markups, embedding)
+                  	,
+
+  EachIdentifier	= IdCon,
+
+  NoElseMayFollow 	= ~"else",
+
+  Predicate       	= spaces "!" spaces Predicate:predicate -> new NotPredicate(predicate)
+                  	| Predicate:predicateLeft "&&" Predicate:predicateRight -> new AndPredicate(predicateLeft, predicateRight)
+                  	| Predicate:predicateLeft "||" Predicate:predicateRight -> new OrPredicate(predicateLeft, predicateRight)
+                  	| Expression:expression "." spaces Type:type spaces "?" -> new IsAPredicate(expression, type)
+                  	| Expression,
+
+  Type            	= "list" -> new ListType()
+                  	| "record" -> new RecordType()
+                  	| "string" -> new StringType(),
+
+  Assignment      	= AssignmentId:variable "=" Expression:expression ";" -> new VariableBinding(variable, expression)
+                  	| AssignmentId:variable Formals:formals spaces "=" spaces Statement:statement -> new FunctionBinding(variable, formals, statement),
+
+  TextEntityRef   	= "&" TextEntityRefHead TextEntityRefTail* ";",
+  TextEntityRefHead = letter | "_" | ":",
+  TextEntityRefTail = letterOrDigit | "." | "-" | "_" | ":",
+
+  Text            	= '"' (EscQuote | ~'"'  TextChar)*:idText '"' -> idText.join(''),
+  TextChar        	= TextSymbolChar | Amp | TextCharRef | TextEntityRef | space,
+  TextSymbolChar 	= '!' | cRange('#','%') | cRange('\'',';') | cRange('=','~') | space,
+  TextCharRef     	= "&#" digit+ ";"
+                  	| "&#x" HexaDecimal+ ";",
+
+  Embedding       	= spaces PreText:head Embed:embed TextTail:tail spaces -> new Embedding(head, embed, tail),
+  Embed           	= MarkupNoExprEmbed*:markups Expression:expression -> new ExpressionEmbedding(markups, expression)
+  					| Markup*:markups -> new MarkupEmbedding(markups),
+
+  PreText         	= "\"" TextChar*:text "<" -> (text.join('')),
+  PostText        	= ">" TextChar*:text "\"" -> (text.join('')),
+  MidText         	= ">" TextChar*:text "<" -> (text.join('')),
+  TextTail        	= PostText:text -> new PostTextTail(text)
+                  	| MidText:mid Embed:embed TextTail:tail -> new MidTextTail(mid, embed, tail),
+
+  FunctionDefId		= IdCon,
+  AssignmentId		= IdCon,
+  IdCon           	= spaces IdCharHead:head IdCharTail*:tail spaces
+  					? (
+					  (head.concat(tail.join('')) != 'if' )
+  					&&(head.concat(tail.join('')) != 'comment' )
+  					&&(head.concat(tail.join('')) != 'echo' )
+  					&&(head.concat(tail.join('')) != 'cdata' )
+  					&&(head.concat(tail.join('')) != 'each' )
+  					&&(head.concat(tail.join('')) != 'let' )
+  					&&(head.concat(tail.join('')) != 'yield' )
+  					&&(head.concat(tail.join('')) != 'module' )
+  					&&(head.concat(tail.join('')) != 'import' )
+  					&&(head.concat(tail.join('')) != 'def' )
+  					&&(head.concat(tail.join('')) != 'end' )
+  					&&(head.concat(tail.join('')) != 'site' )
+  					&&(head.concat(tail.join('')) != 'else' )
+  					&&(head.concat(tail.join('')) != 'in' )
+  					  )
+  					-> head.concat(tail.join('')),
+  IdCharHead      	= letter,
+  IdCharTail      	= letterOrDigit | '-',
+  NatCon          	= digit+:d -> d.join('') ,
+  SymbolCon       	= "'":prefix SymbolChar*:idSymbolCon -> prefix.concat(idSymbolCon.join('')),
+  SymbolChar      	= cRange('!','\(') | cRange('*','+') | cRange('-',':') | cRange('<','=') | cRange('?','\\') | cRange('^','|') | ('~'),
+  StrCon          	= "\"" StrChar*:str "\"" -> str.join(''),
+  StrChar         	= ' ' | "\\n" | "\\t" | "\\\"" | "\\\\" | "\\" digit digit digit | '!' | cRange('#','[') | cRange(']', '~'),
+  HexaDecimal     	= char:c ?((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f')),
+  Amp             	= "\&",
+  Comment         	= fromTo('/*', '*/')
+  					| fromTo('//', '\n'):comments -> {WaebricOMetaParser.lineNumber++; comments},
+  space           	= '\n':newLine -> {WaebricOMetaParser.lineNumber++; newLine}
+  					| ^space
+  					| Comment,
+  EscQuote        	= '\\' '\"' -> '\\\"',
+  fromTo :x :y    	= seq(x) (~seq(y) char)* seq(y),
+  cRange :x :y    	= char:c ?(c >= x) ?(c <= y) -> c
+}
+
+WaebricOMetaParser.parentPath = "";
+WaebricOMetaParser.currentDependencies = new Array();
+WaebricOMetaParser.allDependencies = new Array();
+WaebricOMetaParser.environment = new WaebricEnvironment();
+WaebricOMetaParser.subParser = WaebricOMetaParser;
+WaebricOMetaParser.lineNumber = 1;

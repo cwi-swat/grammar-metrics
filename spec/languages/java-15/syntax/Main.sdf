@@ -1,0 +1,11 @@
+module languages/java-15/syntax/Main
+imports
+  languages/java-15/syntax/lexical/Main
+  languages/java-15/syntax/types/Main
+  languages/java-15/syntax/names/Main
+  languages/java-15/syntax/packages/Main
+  languages/java-15/syntax/classes/Main
+  languages/java-15/syntax/interfaces/Main
+  languages/java-15/syntax/arrays/Main
+  languages/java-15/syntax/statements/Main
+  languages/java-15/syntax/expressions/Main

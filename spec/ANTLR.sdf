@@ -1,0 +1,86 @@
+module ANTLR
+
+imports Curly
+
+hiddens
+context-free start-symbols Grammar
+
+exports
+
+sorts Grammar Section Rule Symbol Attr AttrCode SqBracket Finally RuleDecl
+
+context-free syntax
+   "tree"? "grammar" Ident ";" Section* RuleDecl* -> Grammar
+
+   "@"? {Ident "::"}+ Block -> Section 
+   "scope" Ident Block -> Section 
+
+   "fragment"? Rule ";" Finally? -> RuleDecl
+
+    Ident Attr* ":" Symbol -> Rule {class("Rule")}
+
+   "finally" Block -> Finally 
+
+   "@" Ident Block -> AttrCode
+    AttrCode -> Attr
+   "returns" SqBracket -> Attr
+   SqBracket -> Attr
+   "scope" Ident ";" -> Attr
+
+
+   AttrCode -> Symbol
+   Block -> Symbol
+   Ident -> Symbol {class("NonTerminal")}
+   "(" Symbol ")" -> Symbol {bracket}
+   String -> Symbol {class("Terminal")}
+   "." -> Symbol
+   Block "?" -> Symbol {class("Code")}
+
+   Ident SqBracket -> Symbol
+
+context-free syntax
+    "case"          -> Keyword {class("Decision")}
+    "catch"         -> Keyword {class("Decision")}
+    "for"           -> Keyword {class("Decision")}
+    "if"            -> Keyword {class("Decision")}
+    "while"         -> Keyword {class("Decision")}
+
+
+context-free restrictions
+   "." -/- [\.]
+
+lexical syntax
+   "[" ~[\]]* "]" -> SqBracket
+
+
+context-free priorities
+   Symbol "?" -> Symbol
+   >
+  Block -> Symbol
+
+context-free priorities
+   "~" Symbol -> Symbol
+>
+   {Symbol "*" -> Symbol {class("GrammarDecision")}
+   Symbol "+" -> Symbol {class("GrammarDecision")}
+   Symbol "?" -> Symbol {class("GrammarDecision")}
+   "^" Symbol -> Symbol
+}
+>
+  String ".." String -> Symbol
+>
+   "options" Block ":" Symbol -> Symbol
+>
+  Ident "=" Symbol -> Symbol 
+>
+  Symbol Symbol -> Symbol {right}
+>
+  Symbol "=>" Symbol -> Symbol {right}
+>
+  Symbol "->" Symbol  -> Symbol {right, class("Rewrite")}
+>
+   Symbol "|" Symbol -> Symbol {left, class("GrammarDecision")}
+>
+  -> Symbol
+
+

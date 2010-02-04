@@ -1,0 +1,9 @@
+%%%
+ %% Section 8: Classes
+ %%
+ %% @author  Martin Bravenboer <martin@cs.uu.nl>
+ %%%
+module languages/java-15/syntax/classes/Main
+imports
+  languages/java-15/syntax/classes/ClassDeclarations
+  languages/java-15/syntax/classes/EnumDeclarations

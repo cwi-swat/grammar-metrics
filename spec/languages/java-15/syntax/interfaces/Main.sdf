@@ -1,0 +1,11 @@
+%%%
+ %% Chapter 9: Interfaces
+ %%
+ %% @author Martin Bravenboer <martin@cs.uu.nl>
+ %%%
+module languages/java-15/syntax/interfaces/Main
+imports
+  languages/java-15/syntax/interfaces/InterfaceDeclarations
+  languages/java-15/syntax/interfaces/AbstractMethodDeclarations
+  languages/java-15/syntax/interfaces/AnnotationTypes
+  languages/java-15/syntax/interfaces/Annotations

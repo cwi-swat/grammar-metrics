@@ -1,0 +1,5 @@
+module waebric.java.rats.parser.Strings;
+
+String String = ["] ( EscapeSequence / !["\\] _ )* ["] ;
+
+String EscapeSequence = '\\' ('n' / 't' / 'r' / '\\' / '"' / [0-9][0-9][0-9]);

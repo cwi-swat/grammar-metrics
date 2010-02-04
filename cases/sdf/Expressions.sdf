@@ -1,0 +1,35 @@
+module languages/waebric/syntax/Expressions
+
+imports basic/Whitespace
+        basic/NatCon
+        basic/IdentifierCon
+        languages/waebric/syntax/Text
+
+exports
+sorts SymbolCon SymbolChar Expression KeyValuePair
+
+lexical syntax
+  "'" SymbolChar*                    -> SymbolCon   
+  ~[\0-\31\)\ \t\n\r\;\,\>\127-\255] -> SymbolChar  
+
+lexical restrictions
+  SymbolCon -/- ~[\)\ \t\n\r\;\,\>]
+
+context-free syntax
+  Text -> Expression  {cons("text")}
+
+context-free syntax
+  IdCon                -> Expression  {cons("var"), category("MetaVariable")}
+  SymbolCon            -> Expression  {cons("sym")}
+  NatCon               -> Expression  {cons("num")}
+
+context-free priorities
+  Expression "." IdCon -> Expression  {cons("field")}
+  >
+  Expression "+" Expression -> Expression {cons("cat"), left}
+  
+
+context-free syntax
+  "[" {Expression ","}* "]"   -> Expression  {cons("list")}
+  "{" {KeyValuePair ","}* "}" -> Expression  {cons("record")}  
+  IdCon ":" Expression        -> KeyValuePair  {cons("pair")}

@@ -1,0 +1,26 @@
+module languages/waebric/syntax/Embedding
+
+imports languages/waebric/syntax/Markup
+	languages/waebric/syntax/Text
+
+exports
+
+sorts PreText PostText MidText TextTail Embed Embedding
+
+lexical syntax
+  "\"" TextChar* "<" -> PreText   
+  ">" TextChar* "\"" -> PostText  
+  ">" TextChar* "<"  -> MidText   
+
+context-free syntax
+  PostText                -> TextTail {cons("post")}
+  MidText Embed TextTail -> TextTail {cons("mid")}
+  PreText Embed TextTail -> Embedding {cons("pre")}
+
+context-free syntax
+  Markup* Expression -> Embed {cons("exp-embedding")}
+
+context-free priorities
+  Markup* Markup -> Embed {cons("markup-embedding")}
+  >
+  Designator -> Markup

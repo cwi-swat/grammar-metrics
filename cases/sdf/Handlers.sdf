@@ -1,0 +1,154 @@
+module languages/waebric/syntax/Handlers[Markup Expression]
+
+imports languages/sql/syntax/ext/Limit
+        basic/IdentifierCon
+        languages/css3/syntax/Selectors [
+                                          SelectorsGroup => CSSSelectorsGroup
+                                          SimpleSelectorSequence =>
+                                          CSSSimpleSelectorSequence
+                                          SimpleSelector => CSSSimpleSelector
+                                          Combinator => CSSCombinator
+                                          Selector => CSSSelector
+                                          Hash => CSSHash
+                                          Attrib => CSSAttrib
+                                          TypeSelector => CSSTypeSelector
+                                          Universal => CSSUniversal
+                                          Class => CSSClass
+                                          NameSpacePrefix => CSSNameSpacePrefix
+                                          AttribOperator => CSSAttribOperator
+                                          AttribValue => CSSAttribValue
+                                          ElementName => CSSElementName
+                                          FunctionalPseudo =>
+                                          CSSFunctionalPseudo
+                                          Expression => CSSExpression
+                                          Negation => CSSNegation
+                                          NegationArg => CSSNegationArg
+                                          Pseudo => CSSPseudo
+                                          NonASCII => CSSNonASCII
+                                          NMStart => CSSNMStart
+                                          Escape => CSSEscape
+                                          NMChar => CSSNMChar
+                                          String1Char => CSSString1Char
+                                          String1 => CSSString1
+                                          String2Char => CSSString2Char
+                                          String2 => CSSString2
+                                          String => CSSString
+                                          Num => CSSNum
+                                          Number => CSSNumber
+                                          Ident => CSSIdent
+                                          Name => CSSName
+                                          Dimension => CSSDimension
+                                        ]
+
+exports
+sorts Statement URL URLElement Assignment
+
+%% Render markup => write markup stuff to outputwriter (just as in Waebric)
+%% Insert markup => write javascript writing markup.
+
+
+context-free syntax
+  "render" Markup ";"                     -> Statement   
+  "redirect" URL ";"                      -> Statement   
+  "/" {URLElement "/"}*                   -> URL         
+  IdCon                                   -> URLElement  
+  ":" IdCon                               -> URLElement  
+  "let" Assignment+ "in" Statement* "end" -> Statement   
+  IdCon "=" Expression ";"                -> Assignment  
+  QueryExpr                               -> Expression  
+  Expression                              -> Expression  
+  DeleteStatSearched ";"                  -> Statement   
+  InsertStat ";"                          -> Statement   
+  UpdateStatSearched ";"                  -> Statement   
+
+sorts Event
+
+context-free syntax
+  %% Dom modification
+
+  "replace" "inner"? CSSSelectorsGroup "by" Markup ";"                        -> Statement  
+  "insert" Markup "top" | "bottom" | "before" | "after" CSSSelectorsGroup ";" -> Statement  
+  "remove" CSSSelectorsGroup ";"                                                  -> Statement  
+
+context-free syntax
+  %% Visuals
+
+  "hide" CSSSelectorsGroup ";"                                 -> Statement  
+  "show" CSSSelectorsGroup ";"                                 -> Statement  
+  "toggle" ("blind" | "slide" | "appear")? CSSSelectorsGroup ";" -> Statement  
+  Effect CSSSelectorsGroup Options ";"                         -> Statement  
+
+sorts Fraction Decimals
+
+lexical syntax
+  [0]? "." [0-9]+   -> Fraction  
+  [1] "." [0]       -> Fraction  
+  NatCon            -> Decimals  
+  [0-9]* "." [0-9]+ -> Decimals  
+
+lexical restrictions
+  Fraction -/- [0-9]
+  Decimals -/- [0-9]
+
+sorts Option Options
+
+context-free syntax
+  Option*                               -> Options  
+  "duration" Decimals                   -> Option   
+  "after" Decimals                      -> Option   
+  "from" Fraction                       -> Option   
+  "to" Fraction                         -> Option   
+  "queue" ("parallel" | "front" | "end") -> Option   
+
+%%  "W®BRIC"
+
+sorts Effect
+
+context-free syntax
+  "appear"    -> Effect  
+  "fade"      -> Effect  
+  "blindup"   -> Effect  
+  "blinddown" -> Effect  
+  "slideup"   -> Effect  
+  "slidedown" -> Effect  
+  "grow"      -> Effect  
+  "shrink"    -> Effect  
+  "appear"    -> Effect  
+  "dropout"   -> Effect  
+  "fold"      -> Effect  
+  "puff"      -> Effect  
+  "squish"    -> Effect  
+  "switchoff" -> Effect  
+  "highlight" -> Effect  
+  "pulsate"   -> Effect  
+  "shake"     -> Effect  
+
+context-free syntax
+  "click"     -> Event  
+  "mousedown" -> Event  
+  "mouseup"   -> Event  
+  "click"     -> Event  
+  "dblclick"  -> Event  
+  "mousedown" -> Event  
+  "mouseup"   -> Event  
+  "mouseover" -> Event  
+  "mousemove" -> Event  
+  "mouseout"  -> Event  
+  "keypress"  -> Event  
+  "keydown"   -> Event  
+  "keyup"     -> Event  
+  "keypress"  -> Event  
+  "keydown"   -> Event  
+  "keyup"     -> Event  
+  "load"      -> Event  
+  "unload"    -> Event  
+  "abort"     -> Event  
+  "error"     -> Event  
+  "resize"    -> Event  
+  "scroll"    -> Event  
+  "select"    -> Event  
+  "change"    -> Event  
+  "submit"    -> Event  
+  "reset"     -> Event  
+  "focus"     -> Event  
+  "blur"      -> Event  

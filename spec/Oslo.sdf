@@ -1,0 +1,54 @@
+module Oslo
+
+imports Curly
+
+hiddens
+context-free start-symbols Grammar 
+
+exports
+sorts Grammar Anno Symbol Rule Section RuleDecl Modifier Tree
+
+context-free syntax
+  "module" Ident "{" Section* "}" -> Grammar
+  "export" Ident ";" -> Section
+  "language" Ident "{" RuleDecl* "}" -> Section
+
+  Anno? Modifier* Ident Rule ";" -> RuleDecl
+
+  Ident "=" Symbol -> Rule {class("Rule")}
+  
+  "final" -> Modifier
+
+  "@" Block -> Anno
+
+   Ident -> Symbol {class("NonTerminal")}
+   String -> Symbol {class("Terminal")}
+   "(" Symbol ")" -> Symbol {bracket}
+
+   Ident "[" {Tree ","}* "]" -> Tree
+   "[" {Tree ","}* "]" -> Tree
+   Ident -> Tree
+   "valuesof" "(" Ident ")" -> Tree
+   String -> Tree
+
+   String ".." String -> Symbol
+
+context-free priorities
+  {Ident ":" Symbol -> Symbol
+  "^" Symbol -> Symbol}
+  >
+  {Symbol "+" -> Symbol {class("GrammarDecision")}
+  Symbol "*" -> Symbol {class("GrammarDecision")}
+  Symbol "?" -> Symbol {class("GrammarDecision")}}
+  >
+  Symbol Symbol -> Symbol {right}
+  >
+  Symbol "=>" Tree -> Symbol  
+  >
+  Symbol "|" Symbol -> Symbol {left, class("GrammarDecision")}
+  >
+  -> Symbol
+
+  
+
+               

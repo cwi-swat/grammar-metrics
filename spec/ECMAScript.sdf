@@ -1,0 +1,24 @@
+module ECMAScript
+imports
+  languages/ecmascript3/Main
+  
+exports
+  context-free start-symbols Program
+
+exports
+  sorts Asterisk Comment CommentChar
+
+  lexical syntax
+    "/*" CommentChar* "*/" -> Comment {category("Comment")}
+    ~[\*] -> CommentChar
+    Asterisk -> CommentChar
+    Comment -> LAYOUT
+    [\*] -> Asterisk
+    "//" ~[\n]* [\n] -> Comment {category("Comment")}
+
+  lexical restrictions
+    Asterisk -/- [\/]
+
+  context-free restrictions
+    LAYOUT? -/- [\/].[\/]
+    LAYOUT? -/- [\/].[\*]

@@ -1,0 +1,17 @@
+%%%
+ %% Section 7.3: CompilationUnits
+ %%
+ %% @author Martin Bravenboer <martin@cs.uu.nl>
+ %%%
+module languages/java-15/syntax/packages/CompilationUnits
+imports
+  languages/java-15/syntax/packages/PackageDeclarations
+  languages/java-15/syntax/packages/ImportDeclarations
+  languages/java-15/syntax/packages/TypeDeclarations
+
+exports
+  sorts
+    CompilationUnit
+
+  context-free syntax
+    PackageDec? ImportDec* TypeDec+ -> CompilationUnit   {cons("CompilationUnit")}

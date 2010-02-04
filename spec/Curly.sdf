@@ -1,0 +1,69 @@
+module Curly
+
+
+exports
+sorts Rest String Ident SChar1 SChar2
+
+lexical syntax
+  ~[a-zA-Z0-9\_\"\'\{\}\t\ \n\r\(\)]+ -> Rest    
+  [\"] SChar1* [\"]                  -> String  
+  [\'] SChar2* [\']                  -> String  
+  ~[\\\"] -> SChar1
+  ~[\\\'] -> SChar2
+  [\\][\\\"\'\[\]\-\!\<\ \)\(\/\&xnrftu0-9] -> SChar1
+  [\\][\\\'\"\[\]\-\!\<\ \)\(\/\&xnrftu0-9] -> SChar2
+
+
+  [a-zA-Z0-9\_]+                    -> Ident
+
+lexical restrictions
+  Ident -/- [a-zA-Z0-9\_]
+  Rest -/- ~[\"\'\{\}\t\ \n\r\(\)a-zA-Z0-9\_]
+
+sorts Word Bracket Keyword Source Block 
+
+context-free syntax
+  Word+         -> Source  
+
+  %% NB the annotation is here and NOT on the Block production
+  Block         -> Word  {class("Block")}     
+  String        -> Word    
+  Rest          -> Word    
+  Keyword       -> Word
+  Ident         -> Word    
+  Bracket       -> Word    
+
+context-free syntax
+  "{" Word* "}"               -> Block
+  "(" Word* ")"               -> Bracket  
+
+context-free syntax
+  Keyword    -> Ident   {reject} 
+
+context-free restrictions
+  Keyword -/- [a-zA-Z0-9\_]
+
+  lexical syntax
+    [\ \t\n\r]	-> LAYOUT {cons("whitespace")}
+
+  context-free restrictions
+    LAYOUT? -/- [\ \t\n\r]
+
+exports
+  sorts Asterisk Comment CommentChar
+
+  lexical syntax
+    "/*" CommentChar* "*/" -> Comment {category("Comment")}
+    ~[\*] -> CommentChar
+    Asterisk -> CommentChar
+    Comment -> LAYOUT
+    [\*] -> Asterisk
+    "//" ~[\n]* [\n] -> Comment {category("Comment")}
+
+  lexical restrictions
+    Asterisk -/- [\/]
+
+  context-free restrictions
+    LAYOUT? -/- [\/].[\/]
+    LAYOUT? -/- [\/].[\*]
+
