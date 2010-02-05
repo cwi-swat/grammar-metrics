@@ -38,6 +38,7 @@ context-free syntax
    Attribute* -> PAttributes
    QName -> PType
    QName SName -> PType
+   "void" -> PType
 
 sorts Sequence Voided Prefix Suffix Action NodeMarker Primary 
 context-free syntax
@@ -53,6 +54,7 @@ context-free syntax
    Block -> Action
 
    "null" -> Ident {reject}
+   "void" -> Ident {reject}
    "_" -> Ident {reject}
 
 
