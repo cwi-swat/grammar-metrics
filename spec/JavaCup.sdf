@@ -1,0 +1,43 @@
+module JavaCup
+
+imports Curly
+
+hiddens 
+context-free start-symbols Grammar
+
+exports
+sorts Header Body Grammar Imports Decl Import IName Rule Symbol TName Alt
+context-free syntax
+  "package" Ident ";" Header Body -> Grammar
+
+  Imports Decl* -> Header
+
+  Import* -> Imports
+  
+  "import" IName ";" -> Import
+  {Ident "."}+ ("." "*")? -> IName
+
+
+  "parser" "code" Block ";" -> Decl
+
+  "terminal" {TName ","}+ ";" -> Decl
+
+   Ident -> TName
+   Ident Ident -> TName
+
+   "non" "terminal" {TName ","}+ ";" -> Decl
+ 
+
+   "precedence" ("right" | "left") Ident ";" -> Decl
+   "start" "with" Ident ";" -> Decl
+
+
+    Rule* -> Body
+
+
+    Ident "::=" {Alt "|"}+ ";" -> Rule
+
+    Symbol* -> Alt
+    Ident (":" Ident)? -> Symbol
+    Block -> Symbol
+

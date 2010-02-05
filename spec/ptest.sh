@@ -6,7 +6,7 @@ DUMMY=.bla.trm~
 
 set -e
 
-for t in `find cases/${LANG} -name "[a-zA-Z]*" -type f -depth 1`; do
+for t in `echo cases/${LANG}/*.${LANG}`; do
     echo "Parsing $t..."
     cat $t > ${DUMMY}
     echo >> ${DUMMY}
