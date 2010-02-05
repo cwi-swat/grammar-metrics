@@ -1,0 +1,100 @@
+module JavaCC
+
+imports Curly
+
+hiddens
+context-free start-symbols Grammar
+
+exports
+
+sorts Options Header Rule Grammar
+context-free syntax
+   Options Header Rule* -> Grammar
+
+   "options" Block -> Options
+  
+sorts PChunks PChunk PChar PId
+lexical syntax
+   ~[a-zA-Z\_] -> PChar
+   Ident -> PId
+
+   PId -> PChunk
+   PChar -> PChunk
+   PChunk* -> PChunks
+
+lexical syntax
+  "PARSER_END" -> PId {reject}
+
+lexical restrictions
+  PChunks -/- ~[\t\n\r\ ]
+
+sorts State Alt Symbol
+context-free syntax
+  "PARSER_BEGIN" "(" Ident ")" PChunks "PARSER_END" "(" Ident ")" -> Header
+
+  "<" {State ","}+ ">" Ident ":" "{" Alt "}" -> Rule
+
+  Ident Ident "(" ")" ":" "{" "}" "{" Alt "}" -> Rule
+
+  "*" -> State
+  Ident -> State
+
+   -> Alt
+  Symbol -> Alt
+
+context-free priorities
+{
+  Symbol ":" Ident -> Symbol
+  Symbol "*" -> Symbol
+  Symbol "+" -> Symbol
+  Symbol "?" -> Symbol
+}
+  >
+  Symbol Symbol -> Symbol {right}
+  >
+  Symbol "|" Symbol -> Symbol {assoc}
+
+sorts Regexp
+context-free syntax
+  Block -> Symbol
+
+  String -> Symbol
+  "#"? Ident ("(" ")")? -> Symbol
+
+  "(" Symbol ")" -> Symbol {bracket}
+
+  "<" Ident ">" -> Symbol
+
+  "<" Regexp ">" -> Symbol
+
+  "<" Symbol ":" Regexp ">" -> Symbol
+
+%% This should be cleaned up; merge Regexp and symbol
+
+  "(" Regexp ")" -> Regexp {bracket}
+  "[" {Regexp ","}+ "]" -> Regexp
+   String -> Regexp
+  "<" Ident ">" -> Regexp
+
+sorts Num
+lexical syntax
+  [0-9]+ -> Num
+
+lexical restrictions
+  Num -/- [0-9]
+
+context-free priorities
+  Regexp "-" Regexp -> Regexp {non-assoc}
+  >
+  "~" Regexp -> Regexp
+  >
+  {Regexp "*" -> Regexp
+   Regexp "+" -> Regexp
+   Regexp "?" -> Regexp
+   Regexp "{" Num "}" -> Regexp
+ }
+  >
+  Regexp Regexp -> Regexp {right}
+  >
+  Regexp "|" Regexp -> Regexp {assoc}
+

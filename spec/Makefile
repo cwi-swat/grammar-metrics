@@ -1,5 +1,5 @@
 
-test: tables test-antlr test-ometa test-oslo test-rats test-javacup
+test: tables test-antlr test-ometa test-oslo test-rats test-javacup test-javacc
 
 test-antlr: dummy
 	./ptest.sh antlr
@@ -16,6 +16,9 @@ test-oslo: dummy
 test-javacup: dummy
 	./ptest.sh javacup
 
+test-javacc: dummy
+	./ptest.sh javacc
+
 
 tables:
 	sdf2table -p . -c -m ANTLR -o antlr.trm.tbl
@@ -23,6 +26,7 @@ tables:
 	sdf2table -p . -c -m Oslo -o oslo.trm.tbl
 	sdf2table -p . -c -m Rats -o rats.trm.tbl
 	sdf2table -p . -c -m JavaCup -o javacup.trm.tbl
+	sdf2table -p . -c -m JavaCC -o javacc.trm.tbl
 
 clean:
 	rm -f *.trm.tbl
